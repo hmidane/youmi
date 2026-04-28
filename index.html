@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="يومي">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>يومي — My Day</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a14; --surface:#12121f; --card:#16162a; --border:rgba(255,255,255,0.07);
+  --accent:#6c5ce7; --accent2:#a29bfe; --gold:#f9ca24; --green:#00b894;
+  --amber:#e17055; --blue:#74b9ff; --pink:#fd79a8; --red:#ff7675;
+  --text:#e8e8f0; --muted:rgba(232,232,240,0.45); --faint:rgba(232,232,240,0.12);
+  --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overscroll-behavior:none;}
+
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,10,20,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:calc(var(--safe-top) + 10px) 20px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{font-family:'Tajawal',sans-serif;font-size:22px;font-weight:700;color:var(--text);}
+.logo span{color:var(--accent2);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.gym-pill{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--green);color:var(--green);cursor:pointer;user-select:none;transition:all .2s;font-family:'DM Mono';}
+.gym-pill.on{background:var(--green);color:#000;font-weight:500;}
+.date-lbl{font-size:10px;color:var(--muted);}
+
+.scroll{overflow-y:auto;height:calc(100vh - 57px - var(--safe-top));padding:16px 14px calc(var(--safe-bot) + 40px);}
+
+/* NEXT PRAYER HERO */
+.hero{
+  background:var(--card);border:1px solid var(--border);border-radius:22px;
+  padding:20px;margin-bottom:12px;position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;top:-50px;right:-50px;width:160px;height:160px;
+  background:radial-gradient(circle,rgba(108,92,231,.2) 0%,transparent 70%);pointer-events:none;}
+.hero-lbl{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;}
+.hero-name{font-family:'Tajawal',sans-serif;font-size:30px;font-weight:700;color:var(--accent2);line-height:1;}
+.hero-at{font-size:11px;color:var(--muted);margin-top:3px;}
+.hero-cd{font-size:34px;font-weight:500;letter-spacing:.06em;margin-top:10px;color:var(--text);font-variant-numeric:tabular-nums;}
+.hero-cd small{font-size:11px;color:var(--muted);}
+.all-done{font-family:'Tajawal',sans-serif;font-size:18px;color:var(--gold);}
+
+/* PRAYERS GRID */
+.prayers-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px;}
+.pc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:9px 4px;text-align:center;}
+.pc.current{border-color:var(--accent);background:rgba(108,92,231,.14);}
+.pc.done{opacity:.38;}
+.pi{font-size:15px;margin-bottom:2px;}
+.pn{font-size:9px;color:var(--muted);font-family:'Tajawal',sans-serif;margin-bottom:3px;}
+.pt{font-size:12px;font-weight:500;color:var(--text);}
+.pe{width:100%;font-size:10px;border:none;background:transparent;text-align:center;
+  color:var(--muted);padding:0;margin-top:3px;font-family:'DM Mono';cursor:pointer;}
+.pe:focus{outline:none;color:var(--accent2);}
+
+/* SLEEP STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:10px 6px;text-align:center;}
+.stat-v{font-size:15px;font-weight:500;color:var(--text);}
+.stat-l{font-size:9px;color:var(--muted);margin-top:2px;font-family:'Tajawal';}
+
+/* TIMELINE */
+.tl-bar{height:7px;border-radius:8px;overflow:hidden;display:flex;gap:1px;margin-bottom:5px;}
+.tl-s{border-radius:2px;}
+.tl-marks{display:flex;justify-content:space-between;margin-bottom:14px;}
+.tl-marks span{font-size:9px;color:var(--faint);}
+
+/* SCHEDULE */
+.sec{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 7px;}
+.ev-list{display:flex;flex-direction:column;gap:4px;}
+.ev{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-radius:14px;border:1px solid var(--border);background:var(--card);transition:opacity .3s;}
+.ev.past{opacity:.28;}
+.ev.now{border-color:var(--accent)!important;background:rgba(108,92,231,.1)!important;}
+.ev.prayer-ev{border-color:rgba(162,155,254,.28);background:rgba(162,155,254,.06);}
+.ev.gym-ev{border-color:rgba(0,184,148,.28);background:rgba(0,184,148,.06);}
+.ev.meal-ev{border-color:rgba(249,202,36,.18);background:rgba(249,202,36,.04);}
+.ev.commute-ev{border-color:rgba(225,112,85,.25);background:rgba(225,112,85,.05);}
+.ev.sleep-ev{border-color:rgba(108,92,231,.18);background:rgba(108,92,231,.05);}
+.ev-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.ev-t{font-size:10px;font-weight:500;min-width:52px;color:var(--text);line-height:1.9;}
+.ev-body{flex:1;}
+.ev-name{font-size:13px;color:var(--text);line-height:1.3;font-family:'Tajawal',sans-serif;font-weight:500;}
+.ev-sub{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.bdg{font-size:9px;padding:2px 6px;border-radius:7px;margin-left:5px;vertical-align:middle;font-family:'DM Mono';}
+.bdg-dur{background:rgba(255,255,255,.06);color:var(--muted);}
+.bdg-gym{background:rgba(0,184,148,.14);color:var(--green);}
+.bdg-now{background:var(--accent);color:#fff;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
+
+.tip{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 14px 14px 0;padding:12px 14px;margin-top:12px;}
+.tip p{font-size:11px;color:var(--muted);line-height:1.7;}
+
+.install-hint{background:rgba(108,92,231,.08);border:1px solid rgba(108,92,231,.2);border-radius:14px;padding:12px 14px;margin-top:12px;display:flex;gap:10px;align-items:flex-start;}
+.install-hint .ico{font-size:18px;flex-shrink:0;}
+.install-hint p{font-size:11px;color:var(--muted);line-height:1.6;}
+.install-hint strong{color:var(--accent2);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">يو<span>مي</span></div>
+  <div class="topbar-right">
+    <div class="date-lbl" id="dateLbl"></div>
+    <div class="gym-pill" id="gymBtn" onclick="toggleGym()">+ Gym</div>
+  </div>
+</div>
+
+<div class="scroll">
+
+  <!-- NEXT PRAYER HERO -->
+  <div class="hero">
+    <div class="hero-lbl">Next prayer</div>
+    <div class="hero-name" id="heroName">—</div>
+    <div class="hero-at" id="heroAt"></div>
+    <div class="hero-cd" id="heroCd">--:--<small> left</small></div>
+  </div>
+
+  <!-- PRAYERS -->
+  <div class="prayers-grid" id="prayersGrid"></div>
+
+  <!-- STATS -->
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- TIMELINE -->
+  <div class="sec">24h overview</div>
+  <div class="tl-bar" id="tlBar"></div>
+  <div class="tl-marks"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span></div>
+
+  <!-- SCHEDULE -->
+  <div class="sec">Today's schedule</div>
+  <div class="ev-list" id="evList"></div>
+
+  <div class="tip"><p id="tipText"></p></div>
+
+  <div class="install-hint">
+    <div class="ico">📲</div>
+    <p>To install on iPhone: tap <strong>Share</strong> in Safari → <strong>Add to Home Screen</strong>. Opens as a full-screen app, works offline.</p>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────
+const DEF_PRAYERS = [
+  {name:'Fajr',   ar:'الفجر', icon:'🌙', h:5+13/60},
+  {name:'Dhuhr',  ar:'الظهر', icon:'☀️', h:13+28/60},
+  {name:'Asr',    ar:'العصر', icon:'🌤', h:17+9/60},
+  {name:'Maghrib',ar:'المغرب',icon:'🌇', h:20+9/60},
+  {name:'Isha',   ar:'العشاء',icon:'🌑', h:21+39/60},
+];
+
+function load(key, def) { try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; } }
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+
+let prayers = load('prayers', DEF_PRAYERS.map(p => ({...p})));
+let gymOn   = load('gym', false);
+
+// Check if saved prayers are from a previous day — if so reset to defaults for today
+const savedDate = load('prayerDate', null);
+const todayStr  = new Date().toDateString();
+if (savedDate !== todayStr) {
+  prayers = DEF_PRAYERS.map(p => ({...p}));
+  save('prayerDate', todayStr);
+  save('prayers', prayers);
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function fmt(h) {
+  h = ((h % 24) + 24) % 24;
+  const hr = Math.floor(h), mn = Math.round((h - hr) * 60);
+  const ampm = hr < 12 ? 'AM' : 'PM';
+  const h12 = hr === 0 ? 12 : hr > 12 ? hr - 12 : hr;
+  return h12 + ':' + (mn < 10 ? '0' : '') + mn + ' ' + ampm;
+}
+function hhmm(h) {
+  h = ((h % 24) + 24) % 24;
+  const hr = Math.floor(h), mn = Math.round((h - hr) * 60);
+  return (hr < 10 ? '0' : '') + hr + ':' + (mn < 10 ? '0' : '') + mn;
+}
+function parseT(s) { const [a, b] = s.split(':'); return +a + +b / 60; }
+function nowH() { const n = new Date(); return n.getHours() + n.getMinutes() / 60 + n.getSeconds() / 3600; }
+function durStr(d) { const h = Math.floor(d), m = Math.round((d - h) * 60); return m > 0 ? (h > 0 ? h + 'h ' : '') + m + 'min' : h + 'h'; }
+
+// ── DATE LABEL ────────────────────────────────────────────────
+document.getElementById('dateLbl').textContent =
+  new Date().toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+
+// ── GYM TOGGLE ────────────────────────────────────────────────
+function toggleGym() { gymOn = !gymOn; save('gym', gymOn); render(); }
+
+// ── SCHEDULE BUILD ────────────────────────────────────────────
+function buildEvents() {
+  const fajr = prayers[0].h, dhuhr = prayers[1].h, asr = prayers[2].h,
+        mag  = prayers[3].h, isha  = prayers[4].h;
+  const W1S = 9.5, W1E = 12.5, W2S = 14.75, W2E = 18.5, COMM = 0.5;
+  const leaveHome  = W1S - COMM;
+  const arriveHome = W2E + COMM;
+  const bedtime    = isha + 0.5;
+  const wakeup     = fajr;
+  const sleepH     = ((wakeup - bedtime + 24) % 24);
+  const cycles     = Math.floor(sleepH / 1.5);
+
+  const morningEvs = gymOn ? [
+    {h:fajr+0.2,  name:'Freshen up',        sub:'Quick wash, gym kit on',              color:'#e17055', cls:''},
+    {h:7,         name:'Gym',                sub:'7:00 – 8:30 · strength or cardio',   color:'#00b894', cls:'gym-ev', d:'1h 30min', gym:true},
+    {h:8.5,       name:'Shower + breakfast', sub:'Protein meal — essential after gym',  color:'#f9ca24', cls:'meal-ev'},
+  ] : [
+    {h:fajr+0.2,  name:'Morning routine',   sub:'Freshen up, light stretch or walk',  color:'#e17055', cls:''},
+    {h:fajr+0.75, name:'Breakfast',         sub:'Solid meal before work',             color:'#f9ca24', cls:'meal-ev'},
+    {h:fajr+1.25, name:'Free time',         sub:'Read, learn, or relax until ' + fmt(leaveHome), color:'#e17055', cls:''},
+  ];
+
+  const evs = [
+    {h:wakeup,       name:'Wake up + Fajr',     sub:'2 fard rakaat · الفجر',            color:'#a29bfe', cls:'prayer-ev'},
+    ...morningEvs,
+    {h:leaveHome,    name:'Leave home',          sub:'30 min motorcycle to office',      color:'#e17055', cls:'commute-ev', d:'30 min'},
+    {h:W1S,          name:'Work — session 1',    sub:'9:30 → 12:30',                    color:'#74b9ff', cls:'', d:'3h'},
+    {h:dhuhr,        name:'Dhuhr prayer',        sub:'4 fard rakaat · الظهر',            color:'#a29bfe', cls:'prayer-ev'},
+    {h:dhuhr+0.25,   name:'Resume work',         sub:'Until ' + fmt(W1E),               color:'#74b9ff', cls:''},
+    {h:W1E,          name:'Lunch break',         sub:fmt(W1E) + ' → ' + fmt(W2S) + ' · ' + durStr(W2S-W1E), color:'#f9ca24', cls:'meal-ev', d:durStr(W2S-W1E)},
+    {h:W1E+0.25,     name:'Lunch + rest',        sub:'Eat then 20 min nap — recover for session 2', color:'#f9ca24', cls:'meal-ev'},
+    {h:W2S,          name:'Work — session 2',    sub:'2:45 → 6:30',                     color:'#74b9ff', cls:'', d:'3h 45min'},
+    {h:asr,          name:'Asr prayer',          sub:'4 fard rakaat · العصر',            color:'#a29bfe', cls:'prayer-ev'},
+    {h:asr+0.2,      name:'Resume work',         sub:'Until ' + fmt(W2E),               color:'#74b9ff', cls:''},
+    {h:W2E,          name:'Leave office',        sub:'30 min motorcycle home',           color:'#e17055', cls:'commute-ev', d:'30 min'},
+    {h:arriveHome,   name:'Arrive home',         sub:'Decompress, relax',               color:'#888', cls:''},
+    {h:mag-0.33,     name:'Dinner',              sub:'Light meal before Maghrib',        color:'#f9ca24', cls:'meal-ev'},
+    {h:mag,          name:'Maghrib prayer',      sub:'3 fard rakaat · المغرب',           color:'#a29bfe', cls:'prayer-ev'},
+    {h:mag+0.2,      name:'Evening time',        sub:'Family, reading, side projects',  color:'#e17055', cls:''},
+    {h:isha,         name:'Isha prayer',         sub:'4 fard rakaat · العشاء',           color:'#a29bfe', cls:'prayer-ev'},
+    {h:isha+0.2,     name:'Wind-down',           sub:'No screens · dim lights · reading', color:'#6c5ce7', cls:'sleep-ev'},
+    {h:bedtime,      name:'Bedtime',             sub:'Ayat al-Kursi + duaa',            color:'#6c5ce7', cls:'sleep-ev'},
+  ].sort((a,b) => (((a.h%24)+24)%24) - (((b.h%24)+24)%24));
+
+  return { evs, sleepH, cycles, bedtime, wakeup, fajr, isha };
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function render() {
+  const gym = gymOn;
+  document.getElementById('gymBtn').textContent = gym ? 'Gym ON' : '+ Gym';
+  document.getElementById('gymBtn').classList.toggle('on', gym);
+
+  const {evs, sleepH, cycles, bedtime, wakeup} = buildEvents();
+  const fajr = prayers[0].h, dhuhr = prayers[1].h, asr = prayers[2].h,
+        mag  = prayers[3].h, isha  = prayers[4].h;
+  const now  = nowH();
+
+  // Prayer grid
+  document.getElementById('prayersGrid').innerHTML = prayers.map((p, i) => {
+    const done    = now > p.h + 0.25 && !(i===0 && now > 22);
+    const current = now >= p.h && now < p.h + 0.25;
+    const cls     = current ? 'current' : done ? 'done' : '';
+    return `<div class="pc ${cls}">
+      <div class="pi">${p.icon}</div>
+      <div class="pn">${p.name}</div>
+      <div class="pt">${fmt(p.h)}</div>
+      <input class="pe" type="time" value="${hhmm(p.h)}"
+        onchange="prayers[${i}].h=parseT(this.value);save('prayers',prayers);save('prayerDate','${new Date().toDateString()}');render();">
+    </div>`;
+  }).join('');
+
+  // Stats
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat"><div class="stat-v">${fmt(bedtime)}</div><div class="stat-l">Bedtime</div></div>
+    <div class="stat"><div class="stat-v">${fmt(wakeup)}</div><div class="stat-l">Wake up</div></div>
+    <div class="stat"><div class="stat-v">${sleepH.toFixed(1)}h</div><div class="stat-l">Sleep</div></div>
+    <div class="stat"><div class="stat-v">${cycles}</div><div class="stat-l">Cycles</div></div>
+  `;
+
+  // Timeline
+  const W1S=9.5,W1E=12.5,W2S=14.75,W2E=18.5,COMM=0.5;
+  const arrH = W2E+COMM;
+  const tlSegs = [
+    [bedtime,    wakeup,       '#3C3489'],
+    [wakeup,     fajr+0.17,   '#6c5ce7'],
+    gymOn?[fajr+0.17,7,'#e17055']:null,
+    gymOn?[7,8.5,'#00b894']:null,
+    gymOn?[8.5,W1S-COMM,'#e17055']:null,
+    !gymOn?[fajr+0.17,W1S-COMM,'#e17055']:null,
+    [W1S-COMM,   W1S,          '#BA7517'],
+    [W1S,        dhuhr,        '#378ADD'],
+    [dhuhr,      dhuhr+0.25,  '#6c5ce7'],
+    [dhuhr+0.25, W1E,         '#378ADD'],
+    [W1E,        W2S,         '#e17055'],
+    [W2S,        asr,         '#378ADD'],
+    [asr,        asr+0.17,    '#6c5ce7'],
+    [asr+0.17,   W2E,         '#378ADD'],
+    [W2E,        arrH,        '#BA7517'],
+    [arrH,       mag,         '#e17055'],
+    [mag,        mag+0.17,    '#6c5ce7'],
+    [mag+0.17,   isha,        '#e17055'],
+    [isha,       isha+0.17,   '#6c5ce7'],
+    [isha+0.17,  bedtime,     '#2d3561'],
+  ].filter(Boolean);
+
+  document.getElementById('tlBar').innerHTML = tlSegs.map(([s,e,c]) => {
+    const d = ((e-s)+24)%24, pct = (d/24*100).toFixed(2);
+    return `<div class="tl-s" style="width:${pct}%;background:${c};flex-shrink:0;"></div>`;
+  }).join('');
+
+  // Schedule
+  document.getElementById('evList').innerHTML = evs.map(ev => {
+    const h24 = ((ev.h%24)+24)%24;
+    const past = now > h24 + 0.25 && h24 > 3;
+    const isNow = now >= h24 && now < h24 + 0.33;
+    const cls = [ev.cls, past?'past':'', isNow?'now':''].join(' ');
+    return `<div class="ev ${cls}">
+      <div class="ev-dot" style="background:${ev.color};"></div>
+      <div class="ev-t">${fmt(ev.h)}</div>
+      <div class="ev-body">
+        <div class="ev-name">${ev.name}
+          ${isNow ? '<span class="bdg bdg-now">now</span>' : ''}
+          ${ev.gym ? '<span class="bdg bdg-gym">gym</span>' : ''}
+          ${ev.d && !ev.gym ? '<span class="bdg bdg-dur">'+ev.d+'</span>' : ''}
+          ${ev.d && ev.gym  ? '<span class="bdg bdg-dur">'+ev.d+'</span>' : ''}
+        </div>
+        <div class="ev-sub">${ev.sub}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Tip
+  document.getElementById('tipText').textContent = gymOn
+    ? `Gym mode active — train 7:00–8:30 AM fasted after Fajr. Eat protein after. Sleep window: ${sleepH.toFixed(1)}h (${cycles} cycles). Sleep right after Isha.`
+    : `Phase 1 — no gym yet. Build consistency first: wake at Fajr every day without snoozing, sleep right after Isha. After 2–4 weeks tap "+ Gym" to activate the gym slot.`;
+}
+
+// ── HERO COUNTDOWN ────────────────────────────────────────────
+function updateHero() {
+  const now = nowH();
+  let next = null, nextIdx = -1;
+  for (let i = 0; i < prayers.length; i++) {
+    if (prayers[i].h > now) { next = prayers[i]; nextIdx = i; break; }
+  }
+  if (!next) { next = prayers[0]; } // wrap to Fajr tomorrow
+
+  const diff = ((next.h - now) + 24) % 24;
+  const hh = Math.floor(diff);
+  const mm = Math.floor((diff - hh) * 60);
+  const ss = Math.floor(((diff - hh) * 60 - mm) * 60);
+
+  document.getElementById('heroName').textContent = next.ar + ' ' + next.name;
+  document.getElementById('heroAt').textContent   = 'at ' + fmt(next.h);
+  document.getElementById('heroCd').innerHTML     =
+    (hh>0 ? hh+'<small>h </small>':'') +
+    (String(mm).padStart(2,'0')) + '<small>m </small>' +
+    (String(ss).padStart(2,'0')) + '<small>s</small>';
+
+  // refresh prayer card highlights every second
+  document.querySelectorAll('.pc').forEach((el,i)=>{
+    const p = prayers[i];
+    const done = now > p.h + 0.25 && !(i===0 && now > 22);
+    const cur  = now >= p.h && now < p.h + 0.25;
+    el.className = 'pc' + (cur?' current':done?' done':'');
+  });
+
+  // highlight current event
+  document.querySelectorAll('.ev').forEach(el => {
+    el.classList.remove('now');
+    const t = el.querySelector('.ev-t');
+    if (!t) return;
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+render();
+updateHero();
+setInterval(updateHero, 1000);
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
